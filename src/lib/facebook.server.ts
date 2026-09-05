@@ -18,9 +18,19 @@ export function getFacebookCredentials() {
 }
 
 export function facebookRedirectUri(origin?: string | null) {
-  const base = (origin ?? "").replace(/\/$/, "");
+  const base = normalizeFacebookOrigin(origin);
   if (!base) throw new Error("Origin aplikasi tidak diketahui untuk redirect OAuth Facebook.");
   return `${base}/api/public/facebook/callback`;
+}
+
+/** Ubah host editor internal menjadi host preview publik yang dapat didaftarkan di Meta. */
+function normalizeFacebookOrigin(origin?: string | null) {
+  const base = (origin ?? "").replace(/\/$/, "");
+  if (!base) return "";
+  const url = new URL(base);
+  const internalPreview = url.hostname.match(/^([0-9a-f-]+)\.lovableproject\.com$/i);
+  if (internalPreview?.[1]) return `https://id-preview--${internalPreview[1]}.lovable.app`;
+  return url.origin;
 }
 
 /** Ambil origin publik, bukan alamat internal server preview seperti localhost. */
