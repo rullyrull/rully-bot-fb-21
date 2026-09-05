@@ -2,10 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { validateUploadInput } from "./upload-input";
 
 export const getYoutubeStatus = createServerFn({ method: "GET" }).handler(async () => {
-  const { getFacebookCredentials, facebookRedirectUri, loadPageAccounts } = await import("./facebook.server");
+  const { getFacebookCredentials, facebookPublicOrigin, facebookRedirectUri, loadPageAccounts } = await import("./facebook.server");
   const { hasDriveConnection } = await import("./youtube.server");
   const { getRequest } = await import("@tanstack/react-start/server");
-  const redirectUri = facebookRedirectUri(new URL(getRequest().url).origin);
+  const request = getRequest();
+  const redirectUri = facebookRedirectUri(facebookPublicOrigin(request));
   const { appId, appSecret } = getFacebookCredentials();
   const configured = Boolean(appId && appSecret);
   if (!configured)
@@ -61,8 +62,9 @@ export const getYoutubeStatus = createServerFn({ method: "GET" }).handler(async 
 export const getYoutubeAuthUrl = createServerFn({ method: "POST" })
   .handler(async () => {
   const { getRequest } = await import("@tanstack/react-start/server");
-  const origin = new URL(getRequest().url).origin;
-  const { buildFacebookAuthUrl } = await import("./facebook.server");
+  const request = getRequest();
+  const { buildFacebookAuthUrl, facebookPublicOrigin } = await import("./facebook.server");
+  const origin = facebookPublicOrigin(request);
   return { url: buildFacebookAuthUrl(origin) };
 });
 

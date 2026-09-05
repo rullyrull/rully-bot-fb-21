@@ -24,9 +24,10 @@ export const Route = createFileRoute("/api/public/facebook/callback")({
 
         try {
           const fb = await import("@/lib/facebook.server");
+          const publicOrigin = fb.facebookPublicOrigin(request);
           const shortToken = await fb.exchangeFacebookCode(
             code,
-            fb.facebookRedirectUri(url.origin),
+            fb.facebookRedirectUri(publicOrigin),
           );
           const longToken = await fb.extendUserToken(shortToken.access_token);
           const pages = await fb.listManagedPages(longToken.access_token);
@@ -45,7 +46,7 @@ export const Route = createFileRoute("/api/public/facebook/callback")({
           for (const page of pages) {
             await fb.savePageAccount(page);
           }
-          return Response.redirect(`${home}?fb_connected=1`, 302);
+          return Response.redirect(`${publicOrigin}/?fb_connected=1`, 302);
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
           return Response.redirect(`${home}?fb_error=${encodeURIComponent(message)}`, 302);
