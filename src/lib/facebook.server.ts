@@ -28,6 +28,12 @@ export function facebookPublicOrigin(request: Request) {
   const browserOrigin = request.headers.get("origin");
   if (browserOrigin && /^https?:\/\//i.test(browserOrigin)) return browserOrigin;
 
+  const referer = request.headers.get("referer");
+  if (referer) {
+    const refererOrigin = new URL(referer).origin;
+    if (/^https?:\/\//i.test(refererOrigin)) return refererOrigin;
+  }
+
   const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
   if (forwardedHost) {
     const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
