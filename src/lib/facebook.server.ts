@@ -23,6 +23,20 @@ export function facebookRedirectUri(origin?: string | null) {
   return `${base}/api/public/facebook/callback`;
 }
 
+/** Ambil origin publik, bukan alamat internal server preview seperti localhost. */
+export function facebookPublicOrigin(request: Request) {
+  const browserOrigin = request.headers.get("origin");
+  if (browserOrigin && /^https?:\/\//i.test(browserOrigin)) return browserOrigin;
+
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  if (forwardedHost) {
+    const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+
+  return new URL(request.url).origin;
+}
+
 export function buildFacebookAuthUrl(origin: string) {
   const { appId, appSecret } = getFacebookCredentials();
   if (!appId || !appSecret) throw new Error("Kredensial Facebook App belum diatur.");
@@ -53,10 +67,11 @@ export async function exchangeFacebookCode(code: string, redirectUri: string) {
 /** Perpanjang token user menjadi long-lived (~60 hari). */
 export async function extendUserToken(shortToken: string) {
   const { appId, appSecret } = getFacebookCredentials();
+  if (!appId || !appSecret) throw new Error("Kredensial Facebook App belum diatur.");
   const url = new URL(`${GRAPH}/oauth/access_token`);
   url.searchParams.set("grant_type", "fb_exchange_token");
-  url.searchParams.set("client_id", appId!);
-  url.searchParams.set("client_secret", appSecret!);
+  url.searchParams.set("client_id", appId);
+  url.searchParams.set("client_secret", appSecret);
   url.searchParams.set("fb_exchange_token", shortToken);
   const res = await fetch(url);
   const body = await res.text();
