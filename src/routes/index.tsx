@@ -55,6 +55,9 @@ import { folderCodeForChannel } from "@/lib/channel-folders";
 const DEFAULT_FOLDER_URL =
   "https://drive.google.com/drive/folders/1TxuGXApoNmA7FeCTHce9OsC4n6xvwJ56?usp=drive_link";
 
+const FACEBOOK_CALLBACK_URL =
+  "https://id-preview--79bc8996-c75c-4199-89df-23e0f65221a0.lovable.app/api/public/facebook/callback";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -121,12 +124,6 @@ function Home() {
   const [maxVideos, setMaxVideos] = useState("50");
   const [timezone, setTimezone] = useState("Asia/Makassar");
   const [queue, setQueue] = useState<string[]>([]);
-  const [redirectUri, setRedirectUri] = useState("");
-  useEffect(() => {
-    setRedirectUri(`${window.location.origin}/api/public/facebook/callback`);
-  }, []);
-
-
   // Terapkan pengaturan tersimpan sekali saat dimuat, supaya tetap sama setelah remix.
   const [settingsApplied, setSettingsApplied] = useState(false);
   useEffect(() => {
@@ -197,7 +194,7 @@ function Home() {
   });
 
   const connect = useMutation({
-    mutationFn: () => authUrlFn({ data: { origin: window.location.origin } }),
+    mutationFn: () => authUrlFn({ data: { origin: new URL(FACEBOOK_CALLBACK_URL).origin } }),
     onSuccess: (res) => {
       window.location.href = res.url;
     },
@@ -496,7 +493,7 @@ function Home() {
                   lagi.
                 </p>
                 <ul className="space-y-1">
-                  {[redirectUri].map((uri) => (
+                  {[FACEBOOK_CALLBACK_URL].map((uri) => (
                     <li key={uri} className="flex items-center gap-2">
                       <code className="break-all">{uri}</code>
                     </li>
@@ -506,7 +503,7 @@ function Home() {
                   size="sm"
                   variant="secondary"
                   onClick={() => {
-                    void navigator.clipboard.writeText(redirectUri);
+                    void navigator.clipboard.writeText(FACEBOOK_CALLBACK_URL);
                     toast.success("URI disalin");
                   }}
                 >
