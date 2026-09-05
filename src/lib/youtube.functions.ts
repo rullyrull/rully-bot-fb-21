@@ -60,13 +60,15 @@ export const getYoutubeStatus = createServerFn({ method: "GET" }).handler(async 
 });
 
 export const getYoutubeAuthUrl = createServerFn({ method: "POST" })
-  .handler(async () => {
-  const { getRequest } = await import("@tanstack/react-start/server");
-  const request = getRequest();
-  const { buildFacebookAuthUrl, facebookPublicOrigin } = await import("./facebook.server");
-  const origin = facebookPublicOrigin(request);
-  return { url: buildFacebookAuthUrl(origin) };
-});
+  .inputValidator((input: { origin: string }) => {
+    const origin = new URL(input.origin).origin;
+    if (!/^https?:\/\//i.test(origin)) throw new Error("Alamat aplikasi tidak valid.");
+    return { origin };
+  })
+  .handler(async ({ data }) => {
+    const { buildFacebookAuthUrl } = await import("./facebook.server");
+    return { url: buildFacebookAuthUrl(data.origin) };
+  });
 
 /**
  * Login terpisah khusus izin Google Drive (pakai akun Google biasa, bukan

@@ -197,7 +197,7 @@ function Home() {
   });
 
   const connect = useMutation({
-    mutationFn: () => authUrlFn(),
+    mutationFn: () => authUrlFn({ data: { origin: window.location.origin } }),
     onSuccess: (res) => {
       window.location.href = res.url;
     },
